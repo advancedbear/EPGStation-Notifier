@@ -1,0 +1,46 @@
+{
+    "app-id": "com.node.webkit.epgstation.notifier",
+    "app_name": "EPGStationNotifier",
+    "author": "advancedbear",
+    "bugs": {
+        "url": "https://github.com/advancedbear/EPGStation-Notifier/issues"
+    },
+    "dependencies": {
+        "request": "^2.88.0",
+        "socket.io-client": "^2.2.0"
+    },
+    "description": "EPGStation notifier for PC",
+    "homepage": "https://github.com/advancedbear/EPGStation-Notifier#readme",
+    "keywords": [
+        "EPGStation",
+        "DTV",
+        "Mirakurun",
+        "PT3"
+    ],
+    "license": "MIT",
+    "main": "index.html",
+    "name": "epgstation-notifier",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/advancedbear/EPGStation-Notifier.git"
+    },
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "version": "0.0.1",
+    "webkit": {},
+    "window": {
+        "exe_icon": "img\\icon.png",
+        "height": 300,
+        "icon": "img/icon.png",
+        "id": "EPGStation Notifier",
+        "mac_icon": "img/icon.png",
+        "max_height": 300,
+        "max_width": 400,
+        "min_height": 300,
+        "min_width": 400,
+        "resizable": false,
+        "title": "EPGStation Notifier",
+        "width": 400
+    }
+}

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="UTF-8">
+        <title>EPGStation Notifier</title>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+        <script src="https://code.jquery.com/jquery-2.2.4.min.js" defer></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.js" defer></script>
+        <script src="main.js" defer></script>
+        <style>
+            ::-webkit-scrollbar {
+                display: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="navbar-fixed">
+            <nav>
+                <div class="nav-wrapper indigo darken-1">
+                    <a href="#" class="brand-logo left" style="font-size: 1.5rem;">EPGStation Notifier</a>
+                    <ul class="right">
+                        <li><a href="#settings" class="modal-trigger pulse" onclick="loadSettings()"><i class="material-icons">settings</i></a></li>
+                    </ul>
+                </div>
+                <div class="progress" style="margin: 0;">
+                    <div id="timer_bar" class="determinate indigo lighten-2" style="width: 100%; transition-duration: 1s;"></div>
+                </div>
+            </nav>
+        </div>
+        <div id="status" class="row container">
+        </div>
+        <div id="settings" class="modal" style="max-height: 90%; top: 5%;">
+            <div class="modal-content" style="padding: 18px;">
+                <div class="input-field">
+                    <input placeholder="http://192.168.1.1:8888/" id="epgs_url" type="text" class="validate" pattern="https?://.*">
+                    <label for="epgs_url" style="left: 0;">EPGStation URL</label>
+                </div>
+                <div class="file-field input-field">
+                    <input id="tvtest_path" type="file">
+                    <input type="text" class="file-path truncate validate" placeholder="Choose TVTest.exe" pattern="TVTest.exe" id="tvtest_filepath">
+                    <label for="tvtest_path">TVTest Filepath</label>
+                </div>
+                <div class="input-field">
+                    <input placeholder="10～300" id="reload_int" type="number" class="validate" min="10" max="300">
+                    <label for="reload_int" style="left: 0;">Reload Interval Seconds (10～300)</label>
+                </div>
+                <label>
+                    <input type="checkbox" class="filled-in" checked="checked" id="notify_check"/>
+                    <span>Show Notification</span>
+                </label>
+                <a href="#!" class="modal-close waves-effect waves-green btn right" style="bottom: 5px;" onclick="saveSettings();return false;"><i class="material-icons left">save</i>Save</a>
+            </div>
+        </div>
+    </body>
+</html>
