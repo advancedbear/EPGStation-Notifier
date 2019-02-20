@@ -14,7 +14,19 @@ $(document).ready(function(){
 var tray;
 win.on('minimize', function() {
     this.hide();
-    tray = new nw.Tray({ icon: './img/icon.png' });
+    traymenu = new nw.Menu();
+    traymenu.append(new nw.MenuItem({
+        label: "Exit",
+        click: function() {
+          gui.App.quit();
+        }
+    }));
+    tray = new nw.Tray({ 
+        title: 'EPGStation Notifier',
+        tooltip: 'EPGStation Notifier',
+        icon: './img/icon.png',
+        menu: traymenu 
+    });
     tray.on('click', function() {
       win.show();
       this.remove();
@@ -58,6 +70,7 @@ var getReserves = () =>{
                 <span>${new Date(reserve.program.startAt).toLocaleDateString("japanese", {weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric'})}～${new Date(reserve.program.endAt).toLocaleTimeString("japanese", {hour: 'numeric', minute: 'numeric'})}</span>
                 </div>
                 <div class="card-action">
+                <a href="#" onclick="nw.Shell.openExternal('${epgstation_url}#!/stream/program');return false">EPGStationで視聴</a>
                 <a href="#" onclick="launchTvtest(${reserve.program.channelId});return false">TVTestで視聴</a>
                 </div>
                 </div>`)
