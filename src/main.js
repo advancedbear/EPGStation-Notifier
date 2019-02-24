@@ -4,6 +4,7 @@ var gui = require('nw.gui');
 var win = gui.Window.get();
 
 var reserves, recorded, channels, timer, default_timer, epgstation_url;
+var flag = false;
 var int_res, int_timer;
 const notice = new Object;
 
@@ -37,7 +38,6 @@ win.on('minimize', function() {
 var getChannels = () =>{
     request.get(`${epgstation_url}api/channels`, (e, r, b) => {
         channels = JSON.parse(b);
-        console.log(channels);
     })
 }
 
@@ -61,24 +61,68 @@ var getReserves = () =>{
     request.get(`${epgstation_url}api/reserves`, (e, r, b) => {
         reserves = JSON.parse(b);
         date = new Date();
+        let tvtest_link = localStorage.tvtest_path == undefined || JSON.parse(localStorage.tvtest_path) == "" ? "none" : "";
         for(reserve of reserves.reserves){
             if(reserve.program.startAt - date.getTime() < 86400000){
-                $('#status').append(`<div class="card">
-                <div class="card-content" style="padding: 1rem;margin: 0; min-height: 60px;" id="${reserve.program.id}">
-                <h6 class="truncate" title="${reserve.program.name}">${reserve.program.name}</h6>
-                <span class="truncate">${getChannelName(reserve.program.channelId)}</span>
-                <span>${new Date(reserve.program.startAt).toLocaleDateString("japanese", {weekday: 'short', year: 'numeric', month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric'})}～${new Date(reserve.program.endAt).toLocaleTimeString("japanese", {hour: 'numeric', minute: 'numeric'})}</span>
-                </div>
-                <div class="card-action">
-                <a href="#" onclick="nw.Shell.openExternal('${epgstation_url}#!/stream/program');return false">EPGStationで視聴</a>
-                <a href="#" onclick="launchTvtest(${reserve.program.channelId});return false">TVTestで視聴</a>
-                </div>
-                </div>`)
+                $('#status').append(
+                    $("<div></div>", {
+                        "class": "card"
+                    }).append(
+                        $("<div></div>", {
+                            "class": "card-content",
+                            style: "padding: 1rem;margin: 0; min-height: 60px;",
+                            id: reserve.program.id
+                        }).append(
+                            $("<h6></h6>", {
+                                "class": "truncate",
+                                title: reserve.program.name,
+                                text: reserve.program.name
+                            })
+                        ).append(
+                            $("<span></span>", {
+                                "class": "truncate",
+                                "text": getChannelName(reserve.program.channelId)
+                            })
+                        ).append(
+                            $("<span></span>", {
+                                text: new Date(reserve.program.startAt).toLocaleDateString("japanese", {
+                                        weekday: 'short', 
+                                        year: 'numeric', 
+                                        month: 'numeric', 
+                                        day: 'numeric', 
+                                        hour: 'numeric', 
+                                        minute: 'numeric'})
+                                    +"～"+
+                                    new Date(reserve.program.endAt).toLocaleTimeString("japanese", {
+                                        hour: 'numeric',
+                                        minute: 'numeric'
+                                    })
+                            })
+                                
+                        )
+                    ).append(
+                        $("<div></div>", {
+                            "class": "card-action"
+                        }).append(
+                            $("<a></a>", {
+                                href: "#",
+                                onclick: "openEPGStation('/stream/program')",
+                                text: "EPGStationで視聴"
+                            })
+                        ).append(
+                            $("<a></a>", {
+                                href: "#",
+                                onclick: "launchTvtest("+reserve.program.channelId+")",
+                                text: "TVTestで視聴",
+                                style: "display: "+tvtest_link
+                            })
+                        )
+                    )
+                )
                 setNotification(reserve.program.name, reserve.program.id, reserve.program.channelId, reserve.program.startAt)
             }
         }
         getRecord();
-        console.log(`Reserve list: ${reserves.reserves.length}`)
     })
 }
 
@@ -88,15 +132,26 @@ var getRecord = function() {
         for(record of recorded.recorded){
             if(record.recording){
                 $("#recording").remove()
-                $(`#${record.programId}`).prepend('<span class="red-text valign-wrapper" id="recording"><i class="material-icons">fiber_smart_record</i>Recording</span>')
+                $(`#${record.programId}`).prepend(
+                    $("<span></span>", {
+                        "class": "red-text valign-wrapper",
+                        id: "recording",
+                        text: "Recording"
+                    }).prepend(
+                        $("<i></i>", {
+                            "class": "material-icons",
+                            text: "fiber_smart_record"
+                        })
+                    )
+                )
                 clearTimeout(notice[record.programId]);
             }
         }
-        console.log(`Recorded list: ${recorded.recorded.length}`)
     })
 }
 
 var active = function () {
+    $('#status').empty();
     getChannels();
     getReserves();
     int_res = setInterval(()=>{
@@ -119,10 +174,13 @@ var launchTvtest = function(channel) {
     });
 }
 
+var openEPGStation = function(page) {
+    nw.Shell.openExternal(epgstation_url+'#!'+page);
+}
+
 var setNotification = function(title, programId, channel, startTime) {
     date = new Date(); 
     if(startTime - date.getTime() > 0) {
-        console.log(title, programId, channel, startTime)
         if(notice[programId] != null) clearTimeout(notice[programId])
         notice[programId] = setTimeout(()=>{
             if("Notification" in window){
@@ -131,14 +189,13 @@ var setNotification = function(title, programId, channel, startTime) {
                     icon: './img/icon.png',
                     silent: false
                 });
-                console.log(n)
                 setTimeout(n.close.bind(n), 5000); 
                 n.onclick = ()=>{
                     launchTvtest(channel);
                     n.close()
                 }
             }
-        }, startTime - date.getTime() - 180000)
+        }, startTime - date.getTime() - 300000)
     }
 }
 
@@ -148,26 +205,54 @@ var initSettings = function() {
         localStorage.notification = true;
         localStorage.epgstation_url = JSON.stringify("http://192.168.1.1:8888/");
         localStorage.tvtest_path = JSON.stringify(null);
-        $("#status").append(`<div class="card">
-            <div class="card-content" style="padding: 1rem;margin: 0; min-height: 60px;" id="initial">
-            <h6>How to Use?</h6>
-            <ol>
-            <li>EPGStationのアドレスを入力。</li>
-            <li>TVTest.exeを選択する。(オプション)</li>
-            <li>"Notification"オンで番組開始3分前に通知。</li>
-            <li>"Reload Interval"で情報取得頻度を変更。(Default:60秒)</li>
-            </ol>
-            </div>
-            <div class="card-action">
-            <a href="#settings" class="modal-trigger" onclick="initSettings();return false;">初期設定を行う</a>
-            </div>
-            </div>`)
+        console.log(1)
+        $("#status").append(
+            $("div", {
+                "class": "card"
+            }).append(
+                $("div", {
+                    "class": "card-content",
+                    css: {
+                        "padding": "1rem",
+                        "margin": "0",
+                        "min-height": "60px",
+                    },
+                    id: "initial"
+                }).append(
+                    $("h6", {
+                        text: "How to Use?"
+                    })
+                ).append(
+                    $("ol").append(
+                        $("li", {text: "EPGStationのアドレスを入力。"})
+                    ).append(
+                        $("li", {text: "TVTest.exeを選択する。(オプション)"})
+                    ).append(
+                        $("li", {text: "Notificationオンで番組開始5分前から通知。"})
+                    ).append(
+                        $("li", {text: "Reload Intervalで情報取得頻度を変更。(Default:60秒)"})
+                    )
+                )
+            ).append(
+                $("div", {
+                    "class": "card-action"
+                }).append(
+                    $("a", {
+                        href: "#settings",
+                        "class": "modal-trigger",
+                        text: "初期設定を行う"
+                    })
+                )
+            )
+        )
+        flag = true;
     } else {
         default_timer = JSON.parse(localStorage.reload_interval);
         epgstation_url = JSON.parse(localStorage.epgstation_url);
         if(epgstation_url.slice(-1) != "/") epgstation_url += "/";
         timer = default_timer;
         int_res = int_timer = null;
+        flag = true;
     }
 }
 
@@ -194,5 +279,7 @@ var loadSettings = function() {
 }
 
 initSettings();
-active();
-
+if(flag) {
+    initSettings();
+    active();
+}
